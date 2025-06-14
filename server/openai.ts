@@ -54,7 +54,7 @@ export async function generateComicImage(scriptPage: string): Promise<string> {
 
   try {
     const requestData: ChatCompletionCreateParams = {
-      model: "gpt-4o-mini",
+      model: "gpt-image-1",
       messages: [{ role: "user", content: prompt }],
     };
     console.log("Description Request to OpenAI:", JSON.stringify(requestData, null, 2));
