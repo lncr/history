@@ -62,40 +62,37 @@ export async function generateComicImage(scriptPage: string): Promise<string> {
     console.log("Image Prompt:", imagePrompt);
 
     const response = await openai.images.generate({
-      model: "dall-e-3",
+      model: "gpt-image-1",
       prompt: imagePrompt,
       n: 1,
       size: "1024x1024",
-      quality: "standard",
-      style: "vivid",
-      response_format: "b64_json"
     });
-    
+
     console.log("DALL-E Response received with base64 data");
 
     if (!response.data || response.data.length === 0) {
       throw new Error("No image data returned from DALL-E");
     }
-    
+
     const b64Data = response.data[0].b64_json;
     if (!b64Data) {
       throw new Error("No base64 data generated from DALL-E");
     }
-    
+
     // Create images directory if it doesn't exist
     const imagesDir = path.join(process.cwd(), "public", "images");
     if (!fs.existsSync(imagesDir)) {
       fs.mkdirSync(imagesDir, { recursive: true });
     }
-    
+
     // Generate unique filename
     const timestamp = Date.now();
     const filename = `comic_page_${timestamp}.png`;
     const filepath = path.join(imagesDir, filename);
-    
+
     // Write base64 data to file
     fs.writeFileSync(filepath, b64Data, "base64");
-    
+
     // Return the public URL
     const imageUrl = `/images/${filename}`;
     console.log("Successfully saved image to:", imageUrl);
