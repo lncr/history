@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 import type { ChatCompletionCreateParams } from "openai/resources/chat/completions";
+import fs from "fs";
+import path from "path";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -19,7 +21,7 @@ export async function generateComicScript(topic: string): Promise<string[]> {
     console.log("Request to OpenAI:", JSON.stringify(requestData, null, 2));
 
     const response = await openai.chat.completions.create(requestData);
-    
+
     console.log("Raw OpenAI Response:", JSON.stringify(response, null, 2));
 
     const script = response.choices[0].message.content;
@@ -30,17 +32,22 @@ export async function generateComicScript(topic: string): Promise<string[]> {
     console.log("Generated Script:", script);
 
     // Split by HUZZAA and filter out empty strings
-    const pages = script.split("HUZZAA").map(page => page.trim()).filter(page => page.length > 0);
-    
+    const pages = script
+      .split("HUZZAA")
+      .map((page) => page.trim())
+      .filter((page) => page.length > 0);
+
     console.log("Script Pages Count:", pages.length);
     pages.forEach((page, index) => {
       console.log(`Page ${index + 1} Script:`, page);
     });
-    
+
     return pages;
   } catch (error) {
     console.error("Script generation error:", error);
-    throw new Error("Failed to generate comic script: " + (error as Error).message);
+    throw new Error(
+      "Failed to generate comic script: " + (error as Error).message,
+    );
   }
 }
 
@@ -60,33 +67,51 @@ export async function generateComicImage(scriptPage: string): Promise<string> {
       n: 1,
       size: "1024x1024",
       quality: "standard",
-      style: "vivid"
+      style: "vivid",
+      response_format: "b64_json"
     });
     
-    console.log("DALL-E Response:", JSON.stringify(response, null, 2));
+    console.log("DALL-E Response received with base64 data");
 
     if (!response.data || response.data.length === 0) {
       throw new Error("No image data returned from DALL-E");
     }
     
-    const imageUrl = response.data[0].url;
-    if (!imageUrl) {
-      throw new Error("No image URL generated from DALL-E");
+    const b64Data = response.data[0].b64_json;
+    if (!b64Data) {
+      throw new Error("No base64 data generated from DALL-E");
     }
     
-    console.log("Successfully generated image URL:", imageUrl);
+    // Create images directory if it doesn't exist
+    const imagesDir = path.join(process.cwd(), "public", "images");
+    if (!fs.existsSync(imagesDir)) {
+      fs.mkdirSync(imagesDir, { recursive: true });
+    }
+    
+    // Generate unique filename
+    const timestamp = Date.now();
+    const filename = `comic_page_${timestamp}.png`;
+    const filepath = path.join(imagesDir, filename);
+    
+    // Write base64 data to file
+    fs.writeFileSync(filepath, b64Data, "base64");
+    
+    // Return the public URL
+    const imageUrl = `/images/${filename}`;
+    console.log("Successfully saved image to:", imageUrl);
     return imageUrl;
-    
   } catch (dalleError) {
-    console.log("DALL-E failed, falling back to text description generation...");
+    console.log(
+      "DALL-E failed, falling back to text description generation...",
+    );
     console.error("DALL-E Error:", dalleError);
-    
+
     // Fallback to text description generation
     try {
       const descriptionPrompt = `Create a detailed visual description for a comic book page based on this script: ${scriptPage}. Describe the scene in vivid detail including the setting, characters, actions, and visual elements that would make an engaging comic book panel. Focus on historically accurate details and engaging visual storytelling.`;
-      
+
       console.log("Generating text description as fallback...");
-      
+
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [{ role: "user", content: descriptionPrompt }],
@@ -96,13 +121,18 @@ export async function generateComicImage(scriptPage: string): Promise<string> {
       if (!description) {
         throw new Error("No description generated");
       }
-      
+
       console.log("Generated text description:", description);
       return description;
-      
     } catch (descriptionError) {
-      console.error("Both DALL-E and description generation failed:", descriptionError);
-      throw new Error("Failed to generate comic content: " + (descriptionError as Error).message);
+      console.error(
+        "Both DALL-E and description generation failed:",
+        descriptionError,
+      );
+      throw new Error(
+        "Failed to generate comic content: " +
+          (descriptionError as Error).message,
+      );
     }
   }
 }

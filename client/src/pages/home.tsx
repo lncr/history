@@ -269,11 +269,14 @@ export default function HistorySnap() {
                   <CardContent className="space-y-6">
                     {/* Generated Content - Image or Description */}
                     <div className="w-full max-w-4xl mx-auto">
-                      {page.imageUrl.startsWith('http') ? (
+                      {page.imageUrl.startsWith('/images/') || page.imageUrl.startsWith('http') ? (
                         <img 
                           src={page.imageUrl} 
                           alt={`Comic page ${page.pageNumber}`}
                           className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
+                          onError={(e) => {
+                            console.error('Image failed to load:', page.imageUrl);
+                          }}
                         />
                       ) : (
                         <div className="w-full p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200">
