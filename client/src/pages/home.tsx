@@ -267,25 +267,23 @@ export default function HistorySnap() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Generated Image */}
+                    {/* Generated Content - Image or Description */}
                     <div className="w-full max-w-4xl mx-auto">
-                      <img 
-                        src={page.imageUrl} 
-                        alt={`Comic page ${page.pageNumber}`}
-                        className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          const errorDiv = target.nextElementSibling as HTMLElement;
-                          if (errorDiv) errorDiv.style.display = 'block';
-                        }}
-                      />
-                      <div 
-                        className="hidden w-full p-8 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200 text-center"
-                      >
-                        <Palette className="w-12 h-12 text-purple-400 mx-auto mb-3" />
-                        <p className="text-purple-600 font-medium">Image failed to load</p>
-                      </div>
+                      {page.imageUrl.startsWith('http') ? (
+                        <img 
+                          src={page.imageUrl} 
+                          alt={`Comic page ${page.pageNumber}`}
+                          className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
+                        />
+                      ) : (
+                        <div className="w-full p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                          <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                            <Palette className="w-5 h-5" />
+                            Visual Description:
+                          </h4>
+                          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{page.imageUrl}</p>
+                        </div>
+                      )}
                     </div>
                     
                     {/* Script Text */}
