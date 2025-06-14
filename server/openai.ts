@@ -45,39 +45,64 @@ export async function generateComicScript(topic: string): Promise<string[]> {
 }
 
 export async function generateComicImage(scriptPage: string): Promise<string> {
-  const prompt = `Create a detailed visual description for a comic book page based on this script: ${scriptPage}. Describe the scene in vivid detail including the setting, characters, actions, and visual elements that would make an engaging comic book panel. Focus on historically accurate details and engaging visual storytelling.`;
-
-  console.log("=== IMAGE DESCRIPTION GENERATION ===");
+  console.log("=== IMAGE GENERATION ===");
   console.log("Script Page:", scriptPage);
-  console.log("Description Prompt:", prompt);
-  console.log("Prompt Length:", prompt.length);
 
+  // First, try DALL-E image generation
   try {
-    const requestData: ChatCompletionCreateParams = {
-      model: "gpt-image-1",
-      messages: [{ role: "user", content: prompt }],
-    };
-    console.log("Description Request to OpenAI:", JSON.stringify(requestData, null, 2));
+    const imagePrompt = `Comic book style illustration: ${scriptPage}. Historical accuracy, vibrant colors, detailed character expressions, dynamic composition, professional comic art style.`;
+    console.log("Attempting DALL-E image generation...");
+    console.log("Image Prompt:", imagePrompt);
 
-    const response = await openai.chat.completions.create(requestData);
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: imagePrompt,
+      n: 1,
+      size: "1024x1024",
+      quality: "standard",
+      style: "vivid"
+    });
     
-    console.log("Raw Description Response:", JSON.stringify(response, null, 2));
+    console.log("DALL-E Response:", JSON.stringify(response, null, 2));
 
-    const description = response.choices[0].message.content;
-    if (!description) {
-      throw new Error("No description generated");
+    if (!response.data || response.data.length === 0) {
+      throw new Error("No image data returned from DALL-E");
     }
     
-    console.log("Generated Description:", description);
-    
-    // Return the text description instead of an image URL
-    return description;
-  } catch (error) {
-    console.error("Description generation error details:", error);
-    if (error instanceof Error) {
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
+    const imageUrl = response.data[0].url;
+    if (!imageUrl) {
+      throw new Error("No image URL generated from DALL-E");
     }
-    throw new Error("Failed to generate comic description: " + (error as Error).message);
+    
+    console.log("Successfully generated image URL:", imageUrl);
+    return imageUrl;
+    
+  } catch (dalleError) {
+    console.log("DALL-E failed, falling back to text description generation...");
+    console.error("DALL-E Error:", dalleError);
+    
+    // Fallback to text description generation
+    try {
+      const descriptionPrompt = `Create a detailed visual description for a comic book page based on this script: ${scriptPage}. Describe the scene in vivid detail including the setting, characters, actions, and visual elements that would make an engaging comic book panel. Focus on historically accurate details and engaging visual storytelling.`;
+      
+      console.log("Generating text description as fallback...");
+      
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: descriptionPrompt }],
+      });
+
+      const description = response.choices[0].message.content;
+      if (!description) {
+        throw new Error("No description generated");
+      }
+      
+      console.log("Generated text description:", description);
+      return description;
+      
+    } catch (descriptionError) {
+      console.error("Both DALL-E and description generation failed:", descriptionError);
+      throw new Error("Failed to generate comic content: " + (descriptionError as Error).message);
+    }
   }
 }

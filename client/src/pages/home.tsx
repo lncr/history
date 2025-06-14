@@ -13,7 +13,7 @@ import { apiRequest } from "@/lib/queryClient"
 interface ComicPage {
   pageNumber: number
   script: string
-  imageUrl: string // Now contains visual description text instead of actual image URL
+  imageUrl: string // Contains actual image URL from DALL-E
 }
 
 interface ComicResponse {
@@ -267,13 +267,25 @@ export default function HistorySnap() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Visual Description */}
-                    <div className="w-full max-w-4xl mx-auto bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-200">
-                      <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
-                        <Palette className="w-5 h-5" />
-                        Visual Description:
-                      </h4>
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{page.imageUrl}</p>
+                    {/* Generated Image */}
+                    <div className="w-full max-w-4xl mx-auto">
+                      <img 
+                        src={page.imageUrl} 
+                        alt={`Comic page ${page.pageNumber}`}
+                        className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const errorDiv = target.nextElementSibling as HTMLElement;
+                          if (errorDiv) errorDiv.style.display = 'block';
+                        }}
+                      />
+                      <div 
+                        className="hidden w-full p-8 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200 text-center"
+                      >
+                        <Palette className="w-12 h-12 text-purple-400 mx-auto mb-3" />
+                        <p className="text-purple-600 font-medium">Image failed to load</p>
+                      </div>
                     </div>
                     
                     {/* Script Text */}
@@ -330,8 +342,8 @@ export default function HistorySnap() {
           <Card className="bg-white/60 backdrop-blur border-0 shadow-sm">
             <CardContent className="pt-6 text-center">
               <Palette className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">AI Illustrations</h3>
-              <p className="text-sm text-gray-600">Beautiful, engaging artwork for each page of your comic</p>
+              <h3 className="font-semibold mb-2">DALL-E Images</h3>
+              <p className="text-sm text-gray-600">High-quality AI-generated images that appear in real-time as they're created</p>
             </CardContent>
           </Card>
           
