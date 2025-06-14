@@ -30,16 +30,26 @@ export default function HistorySnap() {
   const [currentStatus, setCurrentStatus] = useState("")
   const [totalPages, setTotalPages] = useState(0)
 
-  const generateComicMutation = useMutation({
-    mutationFn: async (topic: string) => {
-      setIsGenerating(true)
-      setComicPages([])
-      setCurrentStatus("Starting generation...")
-      setTotalPages(0)
-      
-      const eventSource = new EventSource(`/api/generate-comic`)
-      
-      // Send the topic via POST using fetch first, then listen to SSE
+  const handleGenerateComic = async () => {
+    if (!topic.trim()) {
+      setError("Please enter a historical topic")
+      return
+    }
+
+    if (isTopicBlocked(topic)) {
+      setError(
+        "This topic is too complex for our current content. Try something like 'Ancient Egypt' or 'Medieval Knights'",
+      )
+      return
+    }
+
+    setError("")
+    setComicPages([])
+    setIsGenerating(true)
+    setCurrentStatus("Starting generation...")
+    setTotalPages(0)
+
+    try {
       const response = await fetch("/api/generate-comic", {
         method: "POST",
         body: JSON.stringify({ topic }),
@@ -50,80 +60,69 @@ export default function HistorySnap() {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      return new Promise<{ success: boolean }>((resolve, reject) => {
-        if (!response.body) {
-          reject(new Error("No response body"))
-          return
+      if (!response.body) {
+        throw new Error("No response body")
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        
+        if (done) {
+          setIsGenerating(false)
+          break
         }
 
-        const reader = response.body.getReader()
-        const decoder = new TextDecoder()
-        let buffer = ''
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
 
-        function readStream(): void {
-          reader.read().then(({ done, value }) => {
-            if (done) {
-              setIsGenerating(false)
-              resolve({ success: true })
-              return
-            }
-
-            buffer += decoder.decode(value, { stream: true })
-            const lines = buffer.split('\n')
-            buffer = lines.pop() || ''
-
-            for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                try {
-                  const data = JSON.parse(line.slice(6))
-                  
-                  switch (data.type) {
-                    case 'status':
-                      setCurrentStatus(data.message)
-                      break
-                    case 'script_complete':
-                      setTotalPages(data.pages)
-                      setCurrentStatus(`Script complete! Generating ${data.pages} pages...`)
-                      break
-                    case 'generating_page':
-                      setCurrentStatus(`Generating page ${data.pageNumber}...`)
-                      break
-                    case 'page_complete':
-                      setComicPages(prev => [...prev, data.page])
-                      setCurrentStatus(`Page ${data.page.pageNumber} complete!`)
-                      break
-                    case 'complete':
-                      setCurrentStatus("Comic generation complete!")
-                      setIsGenerating(false)
-                      resolve({ success: true })
-                      return
-                    case 'error':
-                      setError(data.error)
-                      setIsGenerating(false)
-                      reject(new Error(data.error))
-                      return
-                    case 'page_error':
-                      setError(`Error generating page ${data.pageNumber}: ${data.error}`)
-                      break
-                  }
-                } catch (e) {
-                  console.error('Error parsing SSE data:', e)
-                }
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6))
+              
+              switch (data.type) {
+                case 'status':
+                  setCurrentStatus(data.message)
+                  break
+                case 'script_complete':
+                  setTotalPages(data.pages)
+                  setCurrentStatus(`Script complete! Generating ${data.pages} pages...`)
+                  break
+                case 'generating_page':
+                  setCurrentStatus(`Generating page ${data.pageNumber}...`)
+                  break
+                case 'page_complete':
+                  setComicPages(prev => [...prev, data.page])
+                  setCurrentStatus(`Page ${data.page.pageNumber} complete!`)
+                  break
+                case 'complete':
+                  setCurrentStatus("Comic generation complete!")
+                  setIsGenerating(false)
+                  return
+                case 'error':
+                  setError(data.error)
+                  setIsGenerating(false)
+                  return
+                case 'page_error':
+                  setError(`Error generating page ${data.pageNumber}: ${data.error}`)
+                  break
               }
+            } catch (e) {
+              console.error('Error parsing SSE data:', e)
             }
-
-            readStream()
-          }).catch(reject)
+          }
         }
-
-        readStream()
-      })
-    },
-    onError: (error) => {
+      }
+    } catch (error) {
       setError(error instanceof Error ? error.message : "Failed to generate comic")
       setIsGenerating(false)
     }
-  })
+  }
 
   const blockedTopics = [
     "holocaust",
@@ -154,24 +153,6 @@ export default function HistorySnap() {
 
   const isTopicBlocked = (inputTopic: string) => {
     return blockedTopics.some((blocked) => inputTopic.toLowerCase().includes(blocked.toLowerCase()))
-  }
-
-  const handleGenerateComic = async () => {
-    if (!topic.trim()) {
-      setError("Please enter a historical topic")
-      return
-    }
-
-    if (isTopicBlocked(topic)) {
-      setError(
-        "This topic is too complex for our current content. Try something like 'Ancient Egypt' or 'Medieval Knights'",
-      )
-      return
-    }
-
-    setError("")
-    setComicPages([])
-    generateComicMutation.mutate(topic)
   }
 
   const handleSampleTopic = (sampleTopic: string) => {
@@ -214,7 +195,7 @@ export default function HistorySnap() {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 className="text-lg h-12 border-2 focus:border-purple-400"
-                disabled={generateComicMutation.isPending}
+                disabled={isGenerating}
               />
             </div>
 
@@ -228,7 +209,7 @@ export default function HistorySnap() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleSampleTopic(sampleTopic)}
-                    disabled={generateComicMutation.isPending}
+                    disabled={isGenerating}
                     className="text-xs hover:bg-purple-50 hover:border-purple-300 hover:scale-105 transition-all duration-300 ease-in-out hover:shadow-md"
                   >
                     {sampleTopic}
@@ -308,18 +289,29 @@ export default function HistorySnap() {
         )}
 
         {/* Loading State for Comic Generation */}
-        {generateComicMutation.isPending && (
+        {isGenerating && (
           <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
             <CardContent className="py-12">
               <div className="text-center space-y-4">
                 <Loader2 className="w-12 h-12 text-purple-600 animate-spin mx-auto" />
                 <h3 className="text-xl font-semibold text-gray-800">Creating Your Comic Book</h3>
                 <p className="text-gray-600">
-                  Generating script and illustrations for "{topic}"... This may take a few minutes.
+                  {currentStatus || `Generating script and illustrations for "${topic}"...`}
                 </p>
-                <div className="max-w-md mx-auto bg-gray-200 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full animate-pulse" style={{ width: "60%" }}></div>
-                </div>
+                {totalPages > 0 && (
+                  <div className="max-w-md mx-auto">
+                    <div className="flex justify-between text-sm text-gray-500 mb-1">
+                      <span>Progress</span>
+                      <span>{comicPages.length}/{totalPages} pages complete</span>
+                    </div>
+                    <div className="bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500 ease-out" 
+                        style={{ width: `${(comicPages.length / totalPages) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
