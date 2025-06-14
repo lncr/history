@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Volume2, Palette, Download, Play, AlertTriangle, Sparkles, ShieldCheck } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Loader2, Volume2, Palette, Download, Play, AlertTriangle, Sparkles, ShieldCheck, FileAudio, FileImage, CheckCircle } from "lucide-react"
 
 export default function HistorySnap() {
   const [topic, setTopic] = useState("")
@@ -19,6 +20,9 @@ export default function HistorySnap() {
     downloadUrl: string
   } | null>(null)
   const [error, setError] = useState("")
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [downloadComplete, setDownloadComplete] = useState(false)
 
   const blockedTopics = [
     "holocaust",
@@ -88,6 +92,25 @@ export default function HistorySnap() {
   const handleSampleTopic = (sampleTopic: string) => {
     setTopic(sampleTopic)
     setError("")
+  }
+
+  const handleDownload = async () => {
+    if (!generatedContent) return
+    
+    setIsDownloading(true)
+    setDownloadComplete(false)
+    
+    // Simulate download process
+    setTimeout(() => {
+      setIsDownloading(false)
+      setDownloadComplete(true)
+      
+      // Reset after 2 seconds
+      setTimeout(() => {
+        setDownloadComplete(false)
+        setShowDownloadDialog(false)
+      }, 2000)
+    }, 2000)
   }
 
   return (
@@ -247,14 +270,133 @@ export default function HistorySnap() {
                   <Play className="w-4 h-4 mr-2" />
                   Preview
                 </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="hover:scale-105 transition-all duration-300 ease-in-out hover:shadow-lg transform hover:bg-gray-50"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
+                <Dialog open={showDownloadDialog} onOpenChange={setShowDownloadDialog}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="hover:scale-105 transition-all duration-300 ease-in-out hover:shadow-lg transform hover:bg-gray-50"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        {generatedContent?.type === "audio" ? (
+                          <FileAudio className="w-5 h-5 text-blue-600" />
+                        ) : (
+                          <FileImage className="w-5 h-5 text-purple-600" />
+                        )}
+                        Download Your {generatedContent?.type === "audio" ? "Audio Story" : "Historical Sketch"}
+                      </DialogTitle>
+                      <DialogDescription>
+                        Your {generatedContent?.type === "audio" ? "educational audio story" : "historical illustration"} about "{generatedContent?.title}" is ready to download.
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4">
+                      {/* File Details */}
+                      <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">File type:</span>
+                          <span className="font-medium">
+                            {generatedContent?.type === "audio" ? "MP3 Audio" : "PNG Image"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">Size:</span>
+                          <span className="font-medium">
+                            {generatedContent?.type === "audio" ? "~2.5 MB" : "~1.8 MB"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">Duration/Dimensions:</span>
+                          <span className="font-medium">
+                            {generatedContent?.type === "audio" ? "3-5 minutes" : "1920 x 1080px"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Download Progress */}
+                      {isDownloading && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Preparing your download...</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full animate-pulse" style={{ width: "70%" }}></div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Success State */}
+                      {downloadComplete && (
+                        <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
+                          <CheckCircle className="w-5 h-5" />
+                          <span className="font-medium">Download completed successfully!</span>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-3 pt-2">
+                        <Button
+                          onClick={handleDownload}
+                          disabled={isDownloading || downloadComplete}
+                          className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+                        >
+                          {isDownloading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Downloading...
+                            </>
+                          ) : downloadComplete ? (
+                            <>
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Downloaded
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-4 h-4 mr-2" />
+                              Start Download
+                            </>
+                          )}
+                        </Button>
+                        
+                        {!isDownloading && !downloadComplete && (
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowDownloadDialog(false)}
+                          >
+                            Cancel
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Usage Instructions */}
+                      <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded-lg">
+                        <p className="font-medium mb-1">Usage Tips:</p>
+                        <ul className="space-y-1">
+                          {generatedContent?.type === "audio" ? (
+                            <>
+                              <li>• Perfect for listening during car rides or quiet time</li>
+                              <li>• Compatible with any audio player or device</li>
+                              <li>• Great for bedtime stories or educational breaks</li>
+                            </>
+                          ) : (
+                            <>
+                              <li>• Use for school projects or presentations</li>
+                              <li>• Print for classroom displays or notebooks</li>
+                              <li>• Share with friends and family for learning together</li>
+                            </>
+                          )}
+                        </ul>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardContent>
           </Card>
