@@ -240,42 +240,55 @@ export default function HistorySnap() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Preview Area */}
-              <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center relative overflow-hidden">
-                {generatedContent.type === "audio" ? (
-                  <div className="text-center space-y-4">
-                    <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center">
-                      <Play className="w-8 h-8 text-white ml-1" />
+              {generatedContent.type === "audio" ? (
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Volume2 className="w-6 h-6 text-white" />
                     </div>
-                    <p className="text-gray-600 font-medium">Educational Audio Ready</p>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 truncate">{generatedContent.title}</h4>
+                      <p className="text-sm text-gray-600">Educational Audio Story • 3-5 minutes</p>
+                      <div className="mt-2 w-full bg-gray-200 rounded-full h-1">
+                        <div className="bg-blue-500 h-1 rounded-full" style={{ width: "0%" }}></div>
+                      </div>
+                    </div>
+                    <Button size="sm" className="bg-blue-500 hover:bg-blue-600">
+                      <Play className="w-4 h-4" />
+                    </Button>
                   </div>
-                ) : (
+                </div>
+              ) : (
+                <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center relative overflow-hidden">
                   <div className="text-center space-y-4">
                     <div className="w-20 h-20 bg-purple-500 rounded-full flex items-center justify-center">
                       <Palette className="w-8 h-8 text-white" />
                     </div>
                     <p className="text-gray-600 font-medium">Historical Sketch Ready</p>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Content Description */}
               <p className="text-gray-700 leading-relaxed">{generatedContent.content}</p>
 
               {/* Action Buttons */}
               <div className="flex gap-3">
-                <Button
-                  className="flex-1 hover:scale-105 transition-all duration-300 ease-in-out hover:shadow-lg transform"
-                  size="lg"
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  Preview
-                </Button>
+                {generatedContent.type === "sketch" ? (
+                  <Button
+                    className="flex-1 hover:scale-105 transition-all duration-300 ease-in-out hover:shadow-lg transform"
+                    size="lg"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Preview
+                  </Button>
+                ) : null}
                 <Dialog open={showDownloadDialog} onOpenChange={setShowDownloadDialog}>
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
-                      size="lg"
-                      className="hover:scale-105 transition-all duration-300 ease-in-out hover:shadow-lg transform hover:bg-gray-50"
+                      size={generatedContent.type === "sketch" ? "lg" : "lg"}
+                      className={`hover:scale-105 transition-all duration-300 ease-in-out hover:shadow-lg transform hover:bg-gray-50 ${generatedContent.type === "audio" ? "flex-1" : ""}`}
                     >
                       <Download className="w-4 h-4 mr-2" />
                       Download
