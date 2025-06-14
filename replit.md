@@ -2,7 +2,7 @@
 
 ## Overview
 
-HistorySnap is a full-stack educational web application that transforms historical topics into engaging audio stories or Disney-style sketches. The application is designed for young learners aged 10+ and includes content filtering to ensure age-appropriate material.
+HistorySnap is a full-stack educational web application that transforms historical topics into engaging 4-page comic books using OpenAI's GPT-4o and DALL-E 3. The application is designed for young learners aged 10+ and includes content filtering to ensure age-appropriate material.
 
 ## System Architecture
 
@@ -30,19 +30,21 @@ HistorySnap is a full-stack educational web application that transforms historic
 ## Key Components
 
 ### Client-Side Components
-1. **Home Page (`/`)**: Main interface for topic input and content generation
+1. **Home Page (`/`)**: Main interface for topic input and comic book generation
 2. **UI Components**: Comprehensive shadcn/ui component library including:
    - Form controls (Input, Button, Select, etc.)
    - Layout components (Card, Dialog, Sheet, etc.)
    - Feedback components (Toast, Alert, Progress, etc.)
 3. **Content Filtering**: Built-in topic validation to block inappropriate content
-4. **Generation Interface**: Support for both audio story and sketch generation
+4. **Comic Generation Interface**: OpenAI-powered comic book creation with real-time image display
 
 ### Server-Side Components
 1. **Express Server**: RESTful API with middleware for logging and error handling
-2. **Storage Interface**: Abstracted storage layer with in-memory implementation
-3. **User Management**: Basic user schema with authentication support
-4. **Route Structure**: Organized API routes with `/api` prefix
+2. **OpenAI Integration**: GPT-4o for script generation and DALL-E 3 for image creation
+3. **Comic Generation API**: `/api/generate-comic` endpoint for full comic book creation
+4. **Storage Interface**: Abstracted storage layer with in-memory implementation
+5. **User Management**: Basic user schema with authentication support
+6. **Route Structure**: Organized API routes with `/api` prefix
 
 ### Database Schema
 - **Users Table**: Basic user management with username/password authentication
@@ -54,9 +56,10 @@ HistorySnap is a full-stack educational web application that transforms historic
 1. **User Input**: Historical topic entered through web interface
 2. **Content Filtering**: Client-side validation against blocked topics list
 3. **API Request**: Validated requests sent to Express backend
-4. **Content Generation**: Server processes generation requests (implementation pending)
-5. **Response Handling**: Generated content returned with download capabilities
-6. **Client Updates**: React state management updates UI with results
+4. **Script Generation**: OpenAI GPT-4o creates 4-page comic book scripts separated by "HUZZAA"
+5. **Image Generation**: DALL-E 3 creates historically accurate comic images for each page
+6. **Response Handling**: Generated comic pages displayed directly on webpage
+7. **Client Updates**: React state management updates UI with comic book results
 
 ## External Dependencies
 
@@ -67,6 +70,7 @@ HistorySnap is a full-stack educational web application that transforms historic
 - **@radix-ui/react-***: Accessible UI primitives
 - **tailwindcss**: Utility-first CSS framework
 - **wouter**: Lightweight React router
+- **openai**: OpenAI API client for GPT-4o and DALL-E 3 integration
 
 ### Development Tools
 - **tsx**: TypeScript execution for development
@@ -97,6 +101,9 @@ HistorySnap is a full-stack educational web application that transforms historic
 ```
 Changelog:
 - June 14, 2025. Initial setup
+- June 14, 2025. Migrated from Replit Agent to standard Replit environment
+- June 14, 2025. Integrated OpenAI GPT-4o and DALL-E 3 for comic book generation
+- June 14, 2025. Implemented 4-page comic book creation with script and image generation
 ```
 
 ## User Preferences

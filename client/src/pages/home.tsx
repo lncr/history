@@ -28,12 +28,19 @@ export default function HistorySnap() {
   const [comicPages, setComicPages] = useState<ComicPage[]>([])
 
   const generateComicMutation = useMutation({
-    mutationFn: async (topic: string): Promise<ComicResponse> => {
-      return apiRequest("/api/generate-comic", {
+    mutationFn: async (topic: string) => {
+      const response = await fetch("/api/generate-comic", {
         method: "POST",
         body: JSON.stringify({ topic }),
         headers: { "Content-Type": "application/json" }
       })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      return data as ComicResponse
     },
     onSuccess: (data) => {
       if (data.success) {
