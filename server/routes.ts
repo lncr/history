@@ -11,16 +11,26 @@ const generateComicSchema = z.object({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Comic generation endpoint
   app.post("/api/generate-comic", async (req, res) => {
+    console.log("=== COMIC GENERATION REQUEST ===");
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    console.log("Request headers:", JSON.stringify(req.headers, null, 2));
+    
     try {
       const { topic } = generateComicSchema.parse(req.body);
+      console.log("Validated topic:", topic);
       
       // Generate comic script
+      console.log("Starting script generation...");
       const scriptPages = await generateComicScript(topic);
+      console.log("Script generation completed. Pages:", scriptPages.length);
       
       // Generate images for each page
+      console.log("Starting image generation for all pages...");
       const comicPages = await Promise.all(
         scriptPages.map(async (script, index) => {
+          console.log(`\n--- Generating image for page ${index + 1} ---`);
           const imageUrl = await generateComicImage(script);
+          console.log(`Page ${index + 1} image generated successfully:`, imageUrl);
           return {
             pageNumber: index + 1,
             script,
@@ -29,9 +39,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
       
+      console.log("All comic pages generated successfully:");
+      console.log("Final response:", JSON.stringify({ success: true, pages: comicPages }, null, 2));
+      
       res.json({ success: true, pages: comicPages });
     } catch (error) {
-      console.error("Comic generation error:", error);
+      console.error("=== COMIC GENERATION ERROR ===");
+      console.error("Error type:", typeof error);
+      console.error("Error constructor:", error?.constructor?.name);
+      console.error("Error message:", error instanceof Error ? error.message : String(error));
+      console.error("Error stack:", error instanceof Error ? error.stack : "No stack available");
+      console.error("Full error object:", error);
+      
       res.status(500).json({ 
         success: false, 
         error: error instanceof Error ? error.message : "Failed to generate comic" 
