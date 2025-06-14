@@ -13,7 +13,7 @@ import { apiRequest } from "@/lib/queryClient"
 interface ComicPage {
   pageNumber: number
   script: string
-  imageUrl: string
+  imageUrl: string // Now contains visual description text instead of actual image URL
 }
 
 interface ComicResponse {
@@ -216,17 +216,13 @@ export default function HistorySnap() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Comic Image */}
-                    <div className="w-full max-w-4xl mx-auto">
-                      <img
-                        src={page.imageUrl}
-                        alt={`Comic page ${page.pageNumber} for ${topic}`}
-                        className="w-full h-auto rounded-lg shadow-md border border-gray-200"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
+                    {/* Visual Description */}
+                    <div className="w-full max-w-4xl mx-auto bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-200">
+                      <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                        <Palette className="w-5 h-5" />
+                        Visual Description:
+                      </h4>
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{page.imageUrl}</p>
                     </div>
                     
                     {/* Script Text */}

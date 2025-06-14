@@ -24,17 +24,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const scriptPages = await generateComicScript(topic);
       console.log("Script generation completed. Pages:", scriptPages.length);
       
-      // Generate images for each page
-      console.log("Starting image generation for all pages...");
+      // Generate visual descriptions for each page
+      console.log("Starting visual description generation for all pages...");
       const comicPages = await Promise.all(
         scriptPages.map(async (script, index) => {
-          console.log(`\n--- Generating image for page ${index + 1} ---`);
-          const imageUrl = await generateComicImage(script);
-          console.log(`Page ${index + 1} image generated successfully:`, imageUrl);
+          console.log(`\n--- Generating visual description for page ${index + 1} ---`);
+          const visualDescription = await generateComicImage(script);
+          console.log(`Page ${index + 1} visual description generated successfully`);
           return {
             pageNumber: index + 1,
             script,
-            imageUrl,
+            imageUrl: visualDescription, // Using imageUrl field to store visual description
           };
         })
       );

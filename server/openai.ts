@@ -45,42 +45,39 @@ export async function generateComicScript(topic: string): Promise<string[]> {
 }
 
 export async function generateComicImage(scriptPage: string): Promise<string> {
-  const prompt = `Generate me a historically accurate and engaging comic book page from given script: ${scriptPage}`;
+  const prompt = `Create a detailed visual description for a comic book page based on this script: ${scriptPage}. Describe the scene in vivid detail including the setting, characters, actions, and visual elements that would make an engaging comic book panel. Focus on historically accurate details and engaging visual storytelling.`;
 
-  console.log("=== IMAGE GENERATION ===");
+  console.log("=== IMAGE DESCRIPTION GENERATION ===");
   console.log("Script Page:", scriptPage);
-  console.log("Image Prompt:", prompt);
+  console.log("Description Prompt:", prompt);
   console.log("Prompt Length:", prompt.length);
 
   try {
-    const requestData = {
-      model: "dall-e-3",
-      prompt: prompt,
-      n: 1,
-      size: "1024x1024" as const,
-      quality: "standard" as const,
+    const requestData: ChatCompletionCreateParams = {
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
     };
-    console.log("Image Request to OpenAI:", JSON.stringify(requestData, null, 2));
+    console.log("Description Request to OpenAI:", JSON.stringify(requestData, null, 2));
 
-    const response = await openai.images.generate(requestData);
+    const response = await openai.chat.completions.create(requestData);
     
-    console.log("Raw Image Response:", JSON.stringify(response, null, 2));
+    console.log("Raw Description Response:", JSON.stringify(response, null, 2));
 
-    if (!response.data || !response.data[0]?.url) {
-      console.error("No image data in response:", response);
-      throw new Error("No image URL received from OpenAI");
+    const description = response.choices[0].message.content;
+    if (!description) {
+      throw new Error("No description generated");
     }
     
-    const imageUrl = response.data[0].url;
-    console.log("Generated Image URL:", imageUrl);
+    console.log("Generated Description:", description);
     
-    return imageUrl;
+    // Return the text description instead of an image URL
+    return description;
   } catch (error) {
-    console.error("Image generation error details:", error);
+    console.error("Description generation error details:", error);
     if (error instanceof Error) {
       console.error("Error message:", error.message);
       console.error("Error stack:", error.stack);
     }
-    throw new Error("Failed to generate comic image: " + (error as Error).message);
+    throw new Error("Failed to generate comic description: " + (error as Error).message);
   }
 }
