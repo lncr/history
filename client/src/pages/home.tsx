@@ -77,7 +77,7 @@ export default function HistorySnap() {
         content:
           type === "audio"
             ? `Educational audio story about ${topic} featuring historical facts and engaging narrative suitable for young learners.`
-            : `Disney-style illustration of ${topic} with key historical facts and colorful, engaging artwork.`,
+            : `Historical illustration of ${topic} with key historical facts and colorful, engaging artwork.`,
         downloadUrl: `#download-${type}-${Date.now()}`,
       })
       setIsGenerating(false)
@@ -230,7 +230,7 @@ export default function HistorySnap() {
                     <div className="w-20 h-20 bg-purple-500 rounded-full flex items-center justify-center">
                       <Palette className="w-8 h-8 text-white" />
                     </div>
-                    <p className="text-gray-600 font-medium">Disney-Style Sketch Ready</p>
+                    <p className="text-gray-600 font-medium">Historical Sketch Ready</p>
                   </div>
                 )}
               </div>
@@ -282,7 +282,7 @@ export default function HistorySnap() {
                   <p className="text-gray-600">
                     {generationType === "audio"
                       ? "Our AI is crafting an educational audio story with historical facts and engaging narrative..."
-                      : "Our AI is creating a beautiful Disney-style illustration with key historical details..."}
+                      : "Our AI is creating a beautiful historical illustration with key historical details..."}
                   </p>
                 </div>
 
@@ -315,7 +315,7 @@ export default function HistorySnap() {
 
           <Card className="text-center p-6 bg-white/60 backdrop-blur border-0 hover:bg-white/80 hover:scale-105 transition-all duration-300 ease-in-out hover:shadow-lg cursor-pointer">
             <Palette className="w-8 h-8 text-purple-500 mx-auto mb-3" />
-            <h3 className="font-semibold mb-2 text-sm">Disney-Style Art</h3>
+            <h3 className="font-semibold mb-2 text-sm">Historical Sketches</h3>
             <p className="text-xs text-gray-600">
               Beautiful illustrations that bring history to life with vibrant colors
             </p>
