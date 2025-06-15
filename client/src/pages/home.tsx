@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Volume2, Palette, AlertTriangle, Sparkles, BookOpen } from "lucide-react"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Loader2, Volume2, Palette, AlertTriangle, Sparkles, BookOpen, ChevronLeft, ChevronRight } from "lucide-react"
 import { useMutation } from "@tanstack/react-query"
 import { apiRequest } from "@/lib/queryClient"
 
@@ -249,54 +250,95 @@ export default function HistorySnap() {
           </CardContent>
         </Card>
 
-        {/* Generated Comic Pages */}
+        {/* Generated Comic Pages - Carousel */}
         {comicPages.length > 0 && (
           <div className="space-y-8">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-gray-800 mb-2">Your Historical Comic Book</h2>
               <p className="text-gray-600">"{topic}" - 4 Page Comic Story</p>
+              <div className="flex items-center justify-center gap-2 mt-4">
+                <span className="text-sm text-gray-500">Page {Math.min(1, comicPages.length)} of {Math.max(4, totalPages || 4)}</span>
+              </div>
             </div>
             
-            <div className="grid gap-8">
-              {comicPages.map((page) => (
-                <Card key={page.pageNumber} className="shadow-lg border-0 bg-white/90 backdrop-blur">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-xl">
-                      <BookOpen className="w-5 h-5 text-purple-600" />
-                      Page {page.pageNumber}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Generated Content - Image or Description */}
-                    <div className="w-full max-w-4xl mx-auto">
-                      {page.imageUrl.startsWith('/images/') || page.imageUrl.startsWith('http') ? (
-                        <img 
-                          src={page.imageUrl} 
-                          alt={`Comic page ${page.pageNumber}`}
-                          className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
-                          onError={(e) => {
-                            console.error('Image failed to load:', page.imageUrl);
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-                          <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
-                            <Palette className="w-5 h-5" />
-                            Visual Description:
-                          </h4>
-                          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{page.imageUrl}</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Script Text */}
-                    <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-purple-500">
-                      <h4 className="font-semibold text-gray-800 mb-2">Page Script:</h4>
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{page.script}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="max-w-4xl mx-auto">
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {comicPages.map((page) => (
+                    <CarouselItem key={page.pageNumber}>
+                      <Card className="shadow-lg border-0 bg-white/90 backdrop-blur">
+                        <CardHeader>
+                          <CardTitle className="flex items-center justify-center gap-2 text-xl">
+                            <BookOpen className="w-5 h-5 text-purple-600" />
+                            Page {page.pageNumber}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          {/* Generated Content - Only show images, no text descriptions */}
+                          <div className="w-full max-w-4xl mx-auto aspect-[4/3] flex items-center justify-center">
+                            {page.imageUrl.startsWith('/images/') || page.imageUrl.startsWith('http') ? (
+                              <img 
+                                src={page.imageUrl} 
+                                alt={`Comic page ${page.pageNumber}`}
+                                className="w-full h-full object-contain rounded-lg shadow-lg border border-gray-200"
+                                onError={(e) => {
+                                  console.error('Image failed to load:', page.imageUrl);
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                                <div className="text-center space-y-3">
+                                  <Palette className="w-12 h-12 text-purple-400 mx-auto" />
+                                  <p className="text-purple-600 font-medium">Image generating...</p>
+                                  <p className="text-sm text-gray-500 max-w-md">This page is being created and will display shortly</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Script Text */}
+                          <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-purple-500">
+                            <h4 className="font-semibold text-gray-800 mb-2 text-center">Page Script</h4>
+                            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-center">{page.script}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                  
+                  {/* Show placeholder cards for pages not yet generated */}
+                  {totalPages > 0 && comicPages.length < totalPages && 
+                    Array.from({ length: totalPages - comicPages.length }, (_, index) => (
+                      <CarouselItem key={`placeholder-${comicPages.length + index + 1}`}>
+                        <Card className="shadow-lg border-0 bg-white/60 backdrop-blur">
+                          <CardHeader>
+                            <CardTitle className="flex items-center justify-center gap-2 text-xl text-gray-400">
+                              <BookOpen className="w-5 h-5" />
+                              Page {comicPages.length + index + 1}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-6">
+                            <div className="w-full max-w-4xl mx-auto aspect-[4/3] flex items-center justify-center">
+                              <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg border-2 border-dashed border-gray-300">
+                                <div className="text-center space-y-3">
+                                  <Loader2 className="w-12 h-12 text-gray-400 mx-auto animate-spin" />
+                                  <p className="text-gray-500 font-medium">Generating page...</p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="bg-gray-100 rounded-lg p-4 border-l-4 border-gray-300">
+                              <h4 className="font-semibold text-gray-500 mb-2 text-center">Page Script</h4>
+                              <p className="text-gray-400 text-center">Waiting for generation...</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </CarouselItem>
+                    ))
+                  }
+                </CarouselContent>
+                <CarouselPrevious className="left-4" />
+                <CarouselNext className="right-4" />
+              </Carousel>
             </div>
           </div>
         )}
@@ -343,8 +385,8 @@ export default function HistorySnap() {
           <Card className="bg-white/60 backdrop-blur border-0 shadow-sm">
             <CardContent className="pt-6 text-center">
               <Palette className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">DALL-E Images</h3>
-              <p className="text-sm text-gray-600">High-quality AI-generated images that appear in real-time as they're created</p>
+              <h3 className="font-semibold mb-2">Visual Stories</h3>
+              <p className="text-sm text-gray-600">AI-generated visual descriptions that bring history to life</p>
             </CardContent>
           </Card>
           
